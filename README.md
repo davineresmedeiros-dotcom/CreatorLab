@@ -24,7 +24,7 @@ The editor currently has these entry buttons:
 - **CreatorLab** — project/toolkit entry point.
 - **Stamp** — captures selected objects to a JSON file.
 - **Stamps** — cycles through saved stamp files to choose the active one.
-- **Apply** — places the active stamp around the center of a selected target area, after checking its captured position bounds.
+- **Preview** — shows the selected stamp's name, file, object count, and position-bounds size without changing the level (information preview, not a visual ghost yet).\n- **Apply** — places the active stamp around the center of a selected target area, after checking its captured position bounds.
 
 The stamp prototype currently stores object ID, relative X/Y position, rotation, and scale. The selected target objects are used as area markers; Apply is intended to create new objects without modifying those markers or copying groups, colors, triggers, or other extra properties.
 
