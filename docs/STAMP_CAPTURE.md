@@ -4,9 +4,9 @@
 
 The editor has a **Stamp** button. With objects selected, it writes a JSON file under CreatorLab's save directory in the `stamps` folder.
 
-The first prototype records:
+The prototype currently records:
 - object ID;
-- position relative to the first selected object (anchor);
+- position relative to the center of the selected objects' position bounds (anchor);\n- the selection's relative min/max bounds, for future previews and placement checks;
 - rotation;
 - X and Y scale.
 
@@ -21,7 +21,7 @@ This prototype does not yet preserve:
 - object-specific extra fields;
 - connection ports or Neon Circuit graph data.
 
-It also does not yet provide a stamp browser, thumbnail, preview, or stamp placement/import.
+It also does not yet provide a stamp browser, thumbnail, preview, or stamp placement/import. The anchor is based on object positions (not full sprite collision/visual bounds), so it is a useful layout center but not an exact rendered bounding box.
 
 ## Testing
 
