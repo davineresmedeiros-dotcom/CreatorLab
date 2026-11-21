@@ -222,7 +222,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         std::string stampData((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
 
         auto readNumber = [&stampData](const std::string& key, float& value) -> bool {
-            std::regex pattern(std::string("\\\"") + key + "\\\"\\\\s*:\\\\s*(-?[0-9]+(?:\\\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)");
+            std::regex pattern(std::string("\"") + key + "\"\\s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)");
             std::smatch match;
             if (!std::regex_search(stampData, match, pattern)) return false;
             try {
