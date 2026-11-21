@@ -34,6 +34,39 @@ This document records the researched direction for CreatorLab's decoration tools
 - Provide controls for density, variation, symmetry, and a fixed seed.
 - WFC is a later extension; first ship reliable stamp capture, matching, preview, and undo.
 
+## First practical milestone: Stamp MVP
+
+The first usable release is deliberately smaller than the full generator:
+
+1. **Capture** — save a creator-selected decoration as a stamp.
+2. **Choose** — choose a saved stamp explicitly (current prototype cycles through filenames).
+3. **Preview** — show a non-destructive ghost at the target center before placement.
+4. **Fit check** — verify the stamp's local bounds against the selected target region.
+5. **Apply** — create only the new stamp objects; do not edit the selected area markers.
+6. **Undo safety** — verify that one undo removes the entire placement, and canceling preview creates nothing.
+
+### MVP acceptance checks
+
+- Applying with no selected target area does nothing and explains why.
+- An oversized stamp is rejected before any object is created.
+- Preview/cancel never changes the level.
+- Applying leaves the selected area markers and their groups/properties unchanged.
+- A failed creation reports failure instead of claiming success.
+- All placement code is reviewed and tested in-game before the feature is marked complete.
+
+### After Stamp MVP: first Auto Decoration generator
+
+The first generator should decorate a creator-selected region using only compatible, creator-authored stamps:
+
+- **Style:** Neon Circuit (initial example style).
+- **Density:** sparse / balanced / dense, controlling how many eligible placements are attempted.
+- **Pattern:** straight traces, corners, terminals, and junctions; connect only matching ports.
+- **Seed:** fixed numeric seed for repeatable results.
+- **Preview:** generated placements appear as a preview and can be canceled.
+- **Budget:** cap the number of new objects to protect editor performance.
+
+The generator must not simply scatter objects. It should build a connected pattern from stamp ports, check the region bounds, and stop cleanly when no compatible placement remains.
+
 ## Important constraints
 
 - Preserve the user's existing objects and never silently replace them.
