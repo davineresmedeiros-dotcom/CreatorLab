@@ -23,7 +23,12 @@ The project is being implemented incrementally. Features will only be marked com
 
 ## Decoration engine research
 
-The decoration system is planned around reusable creator-made stamps, shape-aware placement, weighted variations, preview/undo, and later constraint-based tiling. See [DECORATION_ENGINE.md](DECORATION_ENGINE.md) for the research and phased design.
+The decoration system is planned around reusable creator-made stamps, shape-aware matching, weighted variations, preview/undo, and later constraint-based tiling.
+
+- [Decoration engine research and phased design](DECORATION_ENGINE.md)
+- [Original decoration stamp example catalog](DECORATION_EXAMPLES.md)
+
+The example catalog currently describes original design recipes. It is not yet an in-game stamp library.
 
 ## Target compatibility
 
