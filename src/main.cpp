@@ -2,7 +2,7 @@
 #include <Geode/modify/EditorUI.hpp>
 #include <Geode/utils/file.hpp>
 
-#include <chrono>
+#include <algorithm>\n#include <chrono>
 #include <iomanip>
 #include <sstream>
 
@@ -78,14 +78,39 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             return;
         }
 
-        auto first = typeinfo_cast<GameObject*>(selected->objectAtIndex(0));
-        if (!first) {
+        bool foundObject = false;
+        float minX = 0.f;
+        float minY = 0.f;
+        float maxX = 0.f;
+        float maxY = 0.f;
+
+        for (unsigned int i = 0; i < selected->count(); ++i) {
+            auto object = typeinfo_cast<GameObject*>(selected->objectAtIndex(i));
+            if (!object) {
+                continue;
+            }
+            const float x = object->getPositionX();
+            const float y = object->getPositionY();
+            if (!foundObject) {
+                minX = maxX = x;
+                minY = maxY = y;
+                foundObject = true;
+            } else {
+                minX = std::min(minX, x);
+                minY = std::min(minY, y);
+                maxX = std::max(maxX, x);
+                maxY = std::max(maxY, y);
+            }
+        }
+
+        if (!foundObject) {
             FLAlertLayer::create("Stamp Capture", "The selection did not contain a valid object.", "OK")->show();
             return;
         }
 
-        const float anchorX = first->getPositionX();
-        const float anchorY = first->getPositionY();
+        // Center the stamp anchor on the selected objects' position bounds.
+        const float anchorX = (minX + maxX) / 2.f;
+        const float anchorY = (minY + maxY) / 2.f;
 
         std::ostringstream json;
         json << std::fixed << std::setprecision(3);
