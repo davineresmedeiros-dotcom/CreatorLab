@@ -23,12 +23,14 @@ The editor currently has these entry buttons:
 
 - **CreatorLab** — project/toolkit entry point.
 - **Stamp** — captures selected objects to a JSON file.
-- **Stamps** — cycles through saved stamp files to choose the active one.
-- **Preview** — shows the selected stamp's name, file, object count, and position-bounds size without changing the level (information preview, not a visual ghost yet).\n- **Apply** — places the active stamp around the center of a selected target area, after checking its captured position bounds.
+- **Stamps** — lists saved stamp files and cycles the active selection; direct click-to-select is not implemented yet.
+- **Preview** — shows the selected stamp's name, file, object count, and position-bounds size without changing the level.
+- **Ghost** — shows a temporary cyan schematic with dots and a selected-area outline; it is not actual object sprites.
+- **Apply** — places the active stamp around the center of a selected target area, after checking its captured position bounds.
 
 The stamp prototype currently stores object ID, relative X/Y position, rotation, and scale. The selected target objects are used as area markers; Apply is intended to create new objects without modifying those markers or copying groups, colors, triggers, or other extra properties.
 
-**Important:** this is an early source prototype and has not yet been compiled or tested in Geometry Dash. The placement fit check uses object positions, not the full visible sprite bounds. The Ghost preview is schematic dots, not actual object sprites, and has not been compiled or tested in-game. A proper file picker and richer object-property support are not implemented yet.
+**Important:** this is an early source prototype and has not yet been compiled or tested in Geometry Dash. The placement fit check uses object positions, not the full visible sprite bounds. Ghost is schematic, not actual object sprites. Direct click-to-select, rename/delete, richer object-property support, and a proper file picker are not implemented yet. The Stamps stage remains open until a requested build and the first in-game test.
 
 ## Decoration engine
 
