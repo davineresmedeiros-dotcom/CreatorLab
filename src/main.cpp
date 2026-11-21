@@ -121,10 +121,10 @@ class $modify(CreatorLabEditorUI, EditorUI) {
              << "  \"name\": \"Captured Stamp\",\n"
              << "  \"style\": \"custom\",\n"
              << "  \"anchor\": { \"x\": " << anchorX << ", \"y\": " << anchorY << " },\n"
-             << "  \\"bounds\\": { \\"min_x\\": " << (minX - anchorX)
-             << ", \\"min_y\\": " << (minY - anchorY)
-             << ", \\"max_x\\": " << (maxX - anchorX)
-             << ", \\"max_y\\": " << (maxY - anchorY) << " },\\n"
+             << "  \"bounds\": { \"min_x\": " << (minX - anchorX)
+             << ", \"min_y\": " << (minY - anchorY)
+             << ", \"max_x\": " << (maxX - anchorX)
+             << ", \"max_y\": " << (maxY - anchorY) << " },\n"
              << "  \"objects\": [\n";
 
         bool firstEntry = true;
