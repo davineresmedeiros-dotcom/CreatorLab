@@ -9,4 +9,7 @@ add_library(${PROJECT_NAME} SHARED
     src/main.cpp
 )
 
+# Load Geode's CMake helpers before calling setup_geode_mod.
+include($ENV{GEODE_SDK}/CMakeLists.txt)
+
 setup_geode_mod(${PROJECT_NAME})
