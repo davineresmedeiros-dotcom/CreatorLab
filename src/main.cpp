@@ -155,9 +155,9 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         }
 
         std::ostringstream message;
-        message << "Selected stamp:\\n" << m_selectedStampFile
-                << "\\n\\nStamp files: " << files.size()
-                << "\\nTap Stamps again to select another file.\\n"
+        message << "Selected stamp:\n" << m_selectedStampFile
+                << "\n\nStamp files: " << files.size()
+                << "\nTap Stamps again to select another file.\n"
                 << "Press Apply to place the selected stamp in your area.";
         FLAlertLayer::create("Stamp Browser", message.str(), "Close")->show();
     }
