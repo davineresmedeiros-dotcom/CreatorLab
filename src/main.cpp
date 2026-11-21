@@ -377,7 +377,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             message << "Bounds: unavailable in this stamp file.\n\n";
         }
         message << "This is an information preview only. It does not place or change any objects.\n"
-                << "A visual ghost preview will be added after the placement API is verified.";
+                << "Use Ghost for the separate schematic dot-and-outline preview.";
         FLAlertLayer::create("Stamp Preview", message.str(), "Close")->show();
     }
 
