@@ -6,7 +6,8 @@ The editor has a **Stamp** button. With objects selected, it writes a JSON file 
 
 The prototype currently records:
 - object ID;
-- position relative to the center of the selected objects' position bounds (anchor);\n- the selection's relative min/max bounds, for future previews and placement checks;
+- position relative to the center of the selected objects' position bounds (anchor);
+- the selection's relative min/max bounds, for future previews and placement checks;
 - rotation;
 - X and Y scale.
 
