@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
+#include <filesystem>
 #include <sstream>
+#include <vector>
 
 using namespace geode::prelude;
 
@@ -53,6 +55,20 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             }
         }
 
+        auto stampsSprite = ButtonSprite::create("Stamps", "goldFont.fnt", "GJ_button_01.png", 0.7f);
+        if (stampsSprite) {
+            auto stampsButton = CCMenuItemSpriteExtra::create(
+                stampsSprite,
+                this,
+                menu_selector(CreatorLabEditorUI::onBrowseStamps)
+            );
+            stampsButton->setID("creatorlab-browse-stamps-button");
+            menu->addChild(stampsButton);
+            if (m_uiItems) {
+                m_uiItems->addObject(stampsButton);
+            }
+        }
+
         menu->updateLayout();
         return true;
     }
@@ -65,6 +81,58 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             "Neon Circuit is the first planned stamp style.",
             "Let's create!"
         )->show();
+    }
+
+    void onBrowseStamps(CCObject*) {
+        auto stampDir = Mod::get()->getSaveDir() / "stamps";
+        std::error_code ec;
+        std::filesystem::directory_iterator it(
+            std::filesystem::path(stampDir.string()), ec
+        );
+        if (ec) {
+            FLAlertLayer::create(
+                "Stamp Browser",
+                "The stamps folder does not exist yet, or it could not be read.\n\n"
+                "Capture a stamp first using the Stamp button.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        std::vector<std::string> files;
+        for (const auto& entry : it) {
+            if (ec) break;
+            if (entry.is_regular_file(ec) && entry.path().extension() == ".json") {
+                files.push_back(entry.path().filename().string());
+            }
+        }
+        if (ec) {
+            FLAlertLayer::create("Stamp Browser", "Could not read the stamps folder.", "OK")->show();
+            log::warn("CreatorLab: error while listing stamps: {}", ec.message());
+            return;
+        }
+
+        std::sort(files.begin(), files.end(), std::greater<>());
+        if (files.empty()) {
+            FLAlertLayer::create(
+                "Stamp Browser",
+                "No saved stamps yet.\n\nSelect decoration objects and press Stamp to capture your first one.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        std::ostringstream message;
+        message << "Saved stamp files: " << files.size() << "\n\n";
+        const size_t displayCount = std::min<size_t>(files.size(), 15);
+        for (size_t i = 0; i < displayCount; ++i) {
+            message << (i + 1) << ". " << files[i] << "\n";
+        }
+        if (files.size() > displayCount) {
+            message << "\n...and " << (files.size() - displayCount) << " more.";
+        }
+        message << "\n\nThis first browser lists captured files only; stamp preview and placement are next.";
+        FLAlertLayer::create("Stamp Browser", message.str(), "Close")->show();
     }
 
     void onCaptureStamp(CCObject*) {
