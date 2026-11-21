@@ -2,7 +2,8 @@
 #include <Geode/modify/EditorUI.hpp>
 #include <Geode/utils/file.hpp>
 
-#include <algorithm>\n#include <chrono>
+#include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <sstream>
 
