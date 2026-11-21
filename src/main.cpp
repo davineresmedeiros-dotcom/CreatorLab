@@ -75,6 +75,20 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             }
         }
 
+        auto previewSprite = ButtonSprite::create("Preview", "goldFont.fnt", "GJ_button_01.png", 0.7f);
+        if (previewSprite) {
+            auto previewButton = CCMenuItemSpriteExtra::create(
+                previewSprite,
+                this,
+                menu_selector(CreatorLabEditorUI::onPreviewStamp)
+            );
+            previewButton->setID("creatorlab-preview-stamp-button");
+            menu->addChild(previewButton);
+            if (m_uiItems) {
+                m_uiItems->addObject(previewButton);
+            }
+        }
+
         auto applySprite = ButtonSprite::create("Apply", "goldFont.fnt", "GJ_button_01.png", 0.7f);
         if (applySprite) {
             auto applyButton = CCMenuItemSpriteExtra::create(
@@ -160,6 +174,85 @@ class $modify(CreatorLabEditorUI, EditorUI) {
                 << "\nTap Stamps again to select another file.\n"
                 << "Press Apply to place the selected stamp in your area.";
         FLAlertLayer::create("Stamp Browser", message.str(), "Close")->show();
+    }
+
+    void onPreviewStamp(CCObject*) {
+        auto stampDir = Mod::get()->getSaveDir() / "stamps";
+        std::error_code ec;
+        std::filesystem::directory_iterator it(std::filesystem::path(stampDir.string()), ec);
+        if (ec) {
+            FLAlertLayer::create("Stamp Preview", "No saved stamps found. Capture a stamp first.", "OK")->show();
+            return;
+        }
+
+        std::vector<std::filesystem::path> files;
+        const std::filesystem::directory_iterator end;
+        while (it != end && !ec) {
+            const auto& entry = *it;
+            if (entry.is_regular_file(ec) && !ec && entry.path().extension() == ".json") {
+                files.push_back(entry.path());
+            }
+            it.increment(ec);
+        }
+        if (ec || files.empty()) {
+            FLAlertLayer::create("Stamp Preview", "Could not find a saved stamp file.", "OK")->show();
+            return;
+        }
+        std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+            return a.filename().string() > b.filename().string();
+        });
+
+        auto chosenStamp = files.front();
+        if (!m_selectedStampFile.empty()) {
+            auto chosen = std::find_if(files.begin(), files.end(), [this](const auto& path) {
+                return path.filename().string() == m_selectedStampFile;
+            });
+            if (chosen != files.end()) chosenStamp = *chosen;
+        }
+
+        std::ifstream input(chosenStamp.string());
+        if (!input) {
+            FLAlertLayer::create("Stamp Preview", "Could not open the selected stamp.", "OK")->show();
+            return;
+        }
+        std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+
+        std::regex namePattern(R"("name"\s*:\s*"([^"]*)")");
+        std::smatch nameMatch;
+        std::string stampName = chosenStamp.filename().string();
+        if (std::regex_search(data, nameMatch, namePattern)) stampName = nameMatch[1].str();
+
+        std::regex objectPattern(R"("object_id"\s*:\s*(-?\d+))");
+        const auto objectCount = static_cast<size_t>(
+            std::distance(std::sregex_iterator(data.begin(), data.end(), objectPattern), std::sregex_iterator())
+        );
+
+        auto readBound = [&data](const std::string& key, float& value) -> bool {
+            std::regex pattern(std::string("\\\"") + key + "\\\"s*:\\s*(-?[0-9]+(?:\\.[0-9]+)?)");
+            std::smatch match;
+            if (!std::regex_search(data, match, pattern)) return false;
+            try {
+                value = std::stof(match[1].str());
+                return std::isfinite(value);
+            } catch (...) {
+                return false;
+            }
+        };
+
+        float minX, minY, maxX, maxY;
+        std::ostringstream message;
+        message << "Stamp: " << stampName << "\n"
+                << "File: " << chosenStamp.filename().string() << "\n"
+                << "Objects: " << objectCount << "\n\n";
+        if (readBound("min_x", minX) && readBound("min_y", minY) &&
+            readBound("max_x", maxX) && readBound("max_y", maxY)) {
+            message << "Position bounds: " << (maxX - minX) << " x " << (maxY - minY) << "\n\n";
+        } else {
+            message << "Bounds: unavailable in this stamp file.\n\n";
+        }
+        message << "This is an information preview only. It does not place or change any objects.\n"
+                << "A visual ghost preview will be added after the placement API is verified.";
+        FLAlertLayer::create("Stamp Preview", message.str(), "Close")->show();
     }
 
     void onApplyStamp(CCObject*) {
