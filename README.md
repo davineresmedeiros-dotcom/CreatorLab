@@ -21,16 +21,15 @@ CreatorLab is an independent Geode mod project focused on tools and generators f
 
 The project is being implemented incrementally. Features will only be marked complete after they are implemented and tested in-game.
 
-## Decoration engine research
-
-The decoration system is planned around reusable creator-made stamps, shape-aware matching, weighted variations, preview/undo, and later constraint-based tiling.
+## Decoration engine
 
 - [Decoration engine research and phased design](DECORATION_ENGINE.md)
 - [Original decoration stamp example catalog](DECORATION_EXAMPLES.md)
 - [Stamp format draft](docs/STAMP_FORMAT.md)
 - [Neon Circuit straight-stamp data example](examples/neon-circuit-straight.json)
+- [Stamp Capture prototype notes](docs/STAMP_CAPTURE.md)
 
-The catalog and JSON example describe design/data formats only. They are not yet an in-game stamp library or importable object set.
+The editor source now includes an initial Stamp Capture button and JSON save prototype. It records object IDs, positions relative to the first selected object, rotation, and scale. This source change is **not compiled or tested in-game yet**; colors, flips, groups, port data, preview, and placement remain future work.
 
 ## Target compatibility
 
