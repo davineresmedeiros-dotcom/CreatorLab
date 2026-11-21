@@ -17,6 +17,8 @@ using namespace geode::prelude;
 
 // CreatorLab editor entry points and first Stamp Capture prototype.
 class $modify(CreatorLabEditorUI, EditorUI) {
+    std::string m_selectedStampFile;
+
     bool init(LevelEditorLayer* editorLayer) {
         if (!EditorUI::init(editorLayer)) {
             return false;
@@ -142,16 +144,21 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             return;
         }
 
+        // Each tap selects the next saved stamp for the Apply button.
+        auto current = std::find(files.begin(), files.end(), m_selectedStampFile);
+        if (current == files.end()) {
+            m_selectedStampFile = files.front();
+        } else {
+            ++current;
+            if (current == files.end()) current = files.begin();
+            m_selectedStampFile = *current;
+        }
+
         std::ostringstream message;
-        message << "Saved stamp files: " << files.size() << "\n\n";
-        const size_t displayCount = std::min<size_t>(files.size(), 15);
-        for (size_t i = 0; i < displayCount; ++i) {
-            message << (i + 1) << ". " << files[i] << "\n";
-        }
-        if (files.size() > displayCount) {
-            message << "\n...and " << (files.size() - displayCount) << " more.";
-        }
-        message << "\n\nThis first browser lists captured files only; stamp preview and placement are next.";
+        message << "Selected stamp:\\n" << m_selectedStampFile
+                << "\\n\\nStamp files: " << files.size()
+                << "\\nTap Stamps again to select another file.\\n"
+                << "Press Apply to place the selected stamp in your area.";
         FLAlertLayer::create("Stamp Browser", message.str(), "Close")->show();
     }
 
@@ -215,9 +222,17 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             return a.filename().string() > b.filename().string();
         });
 
-        std::ifstream input(stampFiles.front().string());
+        auto chosenStamp = stampFiles.front();
+        if (!m_selectedStampFile.empty()) {
+            auto chosen = std::find_if(stampFiles.begin(), stampFiles.end(), [this](const auto& path) {
+                return path.filename().string() == m_selectedStampFile;
+            });
+            if (chosen != stampFiles.end()) chosenStamp = *chosen;
+        }
+
+        std::ifstream input(chosenStamp.string());
         if (!input) {
-            FLAlertLayer::create("Apply Stamp", "Could not open the newest stamp file.", "OK")->show();
+            FLAlertLayer::create("Apply Stamp", "Could not open the selected stamp file.", "OK")->show();
             return;
         }
         std::string stampData((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
