@@ -21,6 +21,10 @@ CreatorLab is an independent Geode mod project focused on tools and generators f
 
 The project is being implemented incrementally. Features will only be marked complete after they are implemented and tested in-game.
 
+## Decoration engine research
+
+The decoration system is planned around reusable creator-made stamps, shape-aware placement, weighted variations, preview/undo, and later constraint-based tiling. See [DECORATION_ENGINE.md](DECORATION_ENGINE.md) for the research and phased design.
+
 ## Target compatibility
 
 - Geometry Dash 2.2081
@@ -28,7 +32,7 @@ The project is being implemented incrementally. Features will only be marked com
 
 ## Build
 
-Build using the Geode SDK and its CMake environment.
+Build using the Geode SDK and its CMake environment. GitHub Actions builds are manual-only; pushing commits does not trigger compilation.
 
 ## License
 
