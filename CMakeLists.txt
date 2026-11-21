@@ -9,11 +9,12 @@ if("$ENV{GEODE_SDK}" STREQUAL "")
     message(FATAL_ERROR "GEODE_SDK is not set. Configure the project with the Geode SDK environment.")
 endif()
 
+# Add Geode SDK as a subdirectory so its relative VERSION and cmake/ paths
+# resolve from the SDK source folder, not from the CreatorLab project root.
+add_subdirectory("$ENV{GEODE_SDK}" "${CMAKE_CURRENT_BINARY_DIR}/geode-sdk")
+
 add_library(${PROJECT_NAME} SHARED
     src/main.cpp
 )
-
-# Load Geode's CMake helpers before calling setup_geode_mod.
-include("$ENV{GEODE_SDK}/CMakeLists.txt")
 
 setup_geode_mod(${PROJECT_NAME})
