@@ -60,7 +60,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         FLAlertLayer::create(
             "CreatorLab",
             "CreatorLab creator toolkit\n\n"
-            "Stamp Capture prototype is now available from the Stamp button.\n"
+            "Stamp Capture prototype is available from the Stamp button.\n"
             "Neon Circuit is the first planned stamp style.",
             "Let's create!"
         )->show();
@@ -98,20 +98,30 @@ class $modify(CreatorLabEditorUI, EditorUI) {
              << "  \"anchor\": { \"x\": " << anchorX << ", \"y\": " << anchorY << " },\n"
              << "  \"objects\": [\n";
 
+        bool firstEntry = true;
+        unsigned int savedCount = 0;
         for (unsigned int i = 0; i < selected->count(); ++i) {
             auto object = typeinfo_cast<GameObject*>(selected->objectAtIndex(i));
             if (!object) {
                 continue;
             }
-            if (i != 0) {
+            if (!firstEntry) {
                 json << ",\n";
             }
+            firstEntry = false;
+            ++savedCount;
+
             json << "    { \"object_id\": " << object->m_objectID
                  << ", \"x\": " << (object->getPositionX() - anchorX)
                  << ", \"y\": " << (object->getPositionY() - anchorY)
                  << ", \"rotation\": " << object->getRotation()
                  << ", \"scale_x\": " << object->getScaleX()
                  << ", \"scale_y\": " << object->getScaleY() << " }";
+        }
+
+        if (savedCount == 0) {
+            FLAlertLayer::create("Stamp Capture", "No valid editor objects were found in the selection.", "OK")->show();
+            return;
         }
 
         json << "\n  ],\n"
@@ -142,7 +152,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
                 "Saved {} selected objects as a stamp file.\n\n"
                 "Saved properties: object ID, relative position, rotation, and scale.\n"
                 "Colors, flip flags, groups, and connection ports are not captured yet.",
-                selected->count()
+                savedCount
             ),
             "Great!"
         )->show();
