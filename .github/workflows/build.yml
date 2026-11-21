@@ -16,7 +16,7 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         with:
           target: Android64
-          sdk: given
+          sdk: v5.11.2
           cli: v3.9.0
 
       - name: Upload .geode artifact
