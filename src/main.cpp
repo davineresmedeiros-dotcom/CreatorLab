@@ -1,6 +1,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/EditorUI.hpp>
 #include <Geode/utils/file.hpp>
+#include <Geode/ui/Popup.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -14,6 +15,121 @@
 #include <vector>
 
 using namespace geode::prelude;
+
+// Small paged picker for saved stamps. Selection only changes the active filename.
+class CreatorLabStampManagerPopup : public Popup {
+    std::vector<std::string> m_files;
+    std::string m_selectedFile;
+    std::function<void(std::string const&)> m_onSelect;
+    size_t m_page = 0;
+    CCMenu* m_listMenu = nullptr;
+
+    void refreshList() {
+        if (m_listMenu) {
+            m_listMenu->removeFromParentAndCleanup(true);
+            m_listMenu = nullptr;
+        }
+
+        m_listMenu = CCMenu::create();
+        if (!m_listMenu) return;
+        auto size = m_mainLayer->getContentSize();
+        m_listMenu->setPosition({size.width / 2.f, size.height / 2.f - 4.f});
+        m_mainLayer->addChild(m_listMenu);
+
+        constexpr size_t pageSize = 6;
+        const size_t start = m_page * pageSize;
+        const size_t finish = std::min(start + pageSize, m_files.size());
+        for (size_t i = start; i < finish; ++i) {
+            std::string label = (m_files[i] == m_selectedFile ? "> " : "") + m_files[i];
+            auto sprite = ButtonSprite::create(label, "goldFont.fnt", "GJ_button_01.png", 0.52f);
+            if (!sprite) continue;
+            auto item = CCMenuItemSpriteExtra::create(
+                sprite, this, menu_selector(CreatorLabStampManagerPopup::onChooseStamp)
+            );
+            item->setTag(static_cast<int>(i - start));
+            item->setPosition({0.f, 82.f - static_cast<float>(i - start) * 31.f});
+            m_listMenu->addChild(item);
+        }
+
+        auto pageText = CCLabelBMFont::create(
+            fmt::format("{}/{}", m_page + 1, (m_files.size() + pageSize - 1) / pageSize).c_str(),
+            "goldFont.fnt"
+        );
+        if (pageText) {
+            pageText->setScale(0.45f);
+            pageText->setPosition({0.f, -112.f});
+            m_listMenu->addChild(pageText);
+        }
+
+        if (m_page > 0) {
+            auto prevSprite = ButtonSprite::create("<", "goldFont.fnt", "GJ_button_01.png", 0.55f);
+            auto prev = CCMenuItemSpriteExtra::create(
+                prevSprite, this, menu_selector(CreatorLabStampManagerPopup::onPreviousPage)
+            );
+            prev->setPosition({-78.f, -112.f});
+            m_listMenu->addChild(prev);
+        }
+        if (finish < m_files.size()) {
+            auto nextSprite = ButtonSprite::create(">", "goldFont.fnt", "GJ_button_01.png", 0.55f);
+            auto next = CCMenuItemSpriteExtra::create(
+                nextSprite, this, menu_selector(CreatorLabStampManagerPopup::onNextPage)
+            );
+            next->setPosition({78.f, -112.f});
+            m_listMenu->addChild(next);
+        }
+    }
+
+    void onChooseStamp(CCObject* sender) {
+        auto item = typeinfo_cast<CCMenuItem*>(sender);
+        if (!item) return;
+        const size_t index = m_page * 6 + static_cast<size_t>(item->getTag());
+        if (index >= m_files.size()) return;
+        m_selectedFile = m_files[index];
+        if (m_onSelect) m_onSelect(m_selectedFile);
+        this->onClose(nullptr);
+    }
+
+    void onPreviousPage(CCObject*) {
+        if (m_page == 0) return;
+        --m_page;
+        refreshList();
+    }
+
+    void onNextPage(CCObject*) {
+        if ((m_page + 1) * 6 >= m_files.size()) return;
+        ++m_page;
+        refreshList();
+    }
+
+    bool init(
+        std::vector<std::string> const& files,
+        std::string const& selected,
+        std::function<void(std::string const&)> const& onSelect
+    ) {
+        if (!Popup::init(320.f, 300.f)) return false;
+        m_files = files;
+        m_selectedFile = selected;
+        m_onSelect = onSelect;
+        setTitle("Stamp Manager");
+        refreshList();
+        return true;
+    }
+
+public:
+    static CreatorLabStampManagerPopup* create(
+        std::vector<std::string> const& files,
+        std::string const& selected,
+        std::function<void(std::string const&)> const& onSelect
+    ) {
+        auto ret = new CreatorLabStampManagerPopup();
+        if (ret && ret->init(files, selected, onSelect)) {
+            ret->autorelease();
+            return ret;
+        }
+        CC_SAFE_DELETE(ret);
+        return nullptr;
+    }
+};
 
 // CreatorLab editor entry points and first Stamp Capture prototype.
 class $modify(CreatorLabEditorUI, EditorUI) {
@@ -135,14 +251,11 @@ class $modify(CreatorLabEditorUI, EditorUI) {
     void onBrowseStamps(CCObject*) {
         auto stampDir = Mod::get()->getSaveDir() / "stamps";
         std::error_code ec;
-        std::filesystem::directory_iterator it(
-            std::filesystem::path(stampDir.string()), ec
-        );
+        std::filesystem::directory_iterator it(std::filesystem::path(stampDir.string()), ec);
         if (ec) {
             FLAlertLayer::create(
-                "Stamp Browser",
-                "The stamps folder does not exist yet, or it could not be read.\n\n"
-                "Capture a stamp first using the Stamp button.",
+                "Stamp Manager",
+                "No stamps folder was found yet. Capture a stamp first using Stamp.",
                 "OK"
             )->show();
             return;
@@ -158,46 +271,35 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             it.increment(ec);
         }
         if (ec) {
-            FLAlertLayer::create("Stamp Browser", "Could not read the stamps folder.", "OK")->show();
             log::warn("CreatorLab: error while listing stamps: {}", ec.message());
+            FLAlertLayer::create("Stamp Manager", "Could not read the stamps folder.", "OK")->show();
             return;
         }
 
         std::sort(files.begin(), files.end(), std::greater<>());
         if (files.empty()) {
             FLAlertLayer::create(
-                "Stamp Browser",
-                "No saved stamps yet.\n\nSelect decoration objects and press Stamp to capture your first one.",
+                "Stamp Manager",
+                "No saved stamps yet. Select decoration objects and press Stamp to capture one.",
                 "OK"
             )->show();
             return;
         }
 
-        // Each tap selects the next saved stamp for the Apply button.
-        auto current = std::find(files.begin(), files.end(), m_selectedStampFile);
-        if (current == files.end()) {
+        if (std::find(files.begin(), files.end(), m_selectedStampFile) == files.end()) {
             m_selectedStampFile = files.front();
-        } else {
-            ++current;
-            if (current == files.end()) current = files.begin();
-            m_selectedStampFile = *current;
         }
 
-        std::ostringstream message;
-        message << "Selected stamp:\n" << m_selectedStampFile
-                << "\n\nSaved stamps (" << files.size() << "):\n";
-        const size_t displayLimit = std::min<size_t>(files.size(), 12);
-        for (size_t i = 0; i < displayLimit; ++i) {
-            message << (files[i] == m_selectedStampFile ? "  > " : "  - ")
-                    << files[i] << "\n";
-        }
-        if (files.size() > displayLimit) {
-            message << "  ... and " << (files.size() - displayLimit) << " more\n";
-        }
-        message << "\nTap Stamps again to cycle selection.\n"
-                << "Press Apply to place the selected stamp in your area.\n"
-                << "This manager view only lists/selects files; it does not rename or delete them.";
-        FLAlertLayer::create("Stamp Manager", message.str(), "Close")->show();
+        auto popup = CreatorLabStampManagerPopup::create(
+            files,
+            m_selectedStampFile,
+            [this](std::string const& selectedFile) {
+                m_selectedStampFile = selectedFile;
+                log::info("CreatorLab: active stamp selected: {}", m_selectedStampFile);
+            }
+        );
+        if (popup) popup->show();
+        else FLAlertLayer::create("Stamp Manager", "Could not open the stamp picker.", "OK")->show();
     }
 
     void onPreviewStamp(CCObject*) {
