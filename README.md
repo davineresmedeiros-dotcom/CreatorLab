@@ -39,6 +39,7 @@ The stamp prototype currently stores object ID, relative X/Y position, rotation,
 - [Stamp format draft](docs/STAMP_FORMAT.md)
 - [Neon Circuit straight-stamp data example](examples/neon-circuit-straight.json)
 - [Stamp Capture and Apply prototype notes](docs/STAMP_CAPTURE.md)
+- [Stamp first-test checklist](docs/STAMP_TEST_CHECKLIST.md)
 
 ## Target compatibility
 
