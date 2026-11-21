@@ -1,0 +1,52 @@
+{
+  "format": "creatorlab-stamp",
+  "format_version": 1,
+  "id": "neon-circuit-straight",
+  "name": "Neon Circuit — Straight",
+  "style": "neon-circuit",
+  "category": "trace",
+  "tags": [
+    "circuit",
+    "straight",
+    "connectable"
+  ],
+  "anchor": {
+    "x": 0,
+    "y": 0
+  },
+  "bounds": {
+    "min_x": -15,
+    "min_y": -3,
+    "max_x": 15,
+    "max_y": 3
+  },
+  "ports": [
+    {
+      "id": "west",
+      "x": -15,
+      "y": 0,
+      "direction": "W",
+      "type": "trace"
+    },
+    {
+      "id": "east",
+      "x": 15,
+      "y": 0,
+      "direction": "E",
+      "type": "trace"
+    }
+  ],
+  "transforms": {
+    "rotate": true,
+    "flip_x": true,
+    "flip_y": false
+  },
+  "objects": [],
+  "variants": [],
+  "rules": {
+    "must_stay_inside_selection": true,
+    "allow_overlap": false,
+    "require_matching_ports": true
+  },
+  "note": "Design-format example only. Empty objects array; not importable or placeable yet."
+}
