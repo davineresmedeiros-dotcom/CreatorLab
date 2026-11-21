@@ -5,11 +5,15 @@ project(CreatorLab VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if("$ENV{GEODE_SDK}" STREQUAL "")
+    message(FATAL_ERROR "GEODE_SDK is not set. Configure the project with the Geode SDK environment.")
+endif()
+
 add_library(${PROJECT_NAME} SHARED
     src/main.cpp
 )
 
 # Load Geode's CMake helpers before calling setup_geode_mod.
-include($ENV{GEODE_SDK}/CMakeLists.txt)
+include("$ENV{GEODE_SDK}/CMakeLists.txt")
 
 setup_geode_mod(${PROJECT_NAME})
