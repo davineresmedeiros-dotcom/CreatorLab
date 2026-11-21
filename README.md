@@ -28,7 +28,7 @@ The editor currently has these entry buttons:
 
 The stamp prototype currently stores object ID, relative X/Y position, rotation, and scale. The selected target objects are used as area markers; Apply is intended to create new objects without modifying those markers or copying groups, colors, triggers, or other extra properties.
 
-**Important:** this is an early source prototype and has not yet been compiled or tested in Geometry Dash. The placement fit check uses object positions, not the full visible sprite bounds. Stamp preview, a proper file picker, and richer object-property support are not implemented yet.
+**Important:** this is an early source prototype and has not yet been compiled or tested in Geometry Dash. The placement fit check uses object positions, not the full visible sprite bounds. The Ghost preview is schematic dots, not actual object sprites, and has not been compiled or tested in-game. A proper file picker and richer object-property support are not implemented yet.
 
 ## Decoration engine
 
