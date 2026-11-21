@@ -1,0 +1,49 @@
+# CreatorLab Decoration Engine — design notes
+
+This document records the researched direction for CreatorLab's decoration tools. It is a design plan, not a claim that these features are implemented yet.
+
+## What the research shows
+
+- Geometry Dash's native Smart-Block Auto-Build is template-driven: the creator decorates a template, saves it, and the editor matches that design to compatible block shapes.
+- Templates can have weighted variations. Rotation and X/Y flips help reuse a design across orientations.
+- Antiprime's AutoBuild is a separate creator tool. Public tutorials describe a puzzle-tiling workflow and Wave Function Collapse (WFC), with further template and utility features planned in its update notes.
+- The useful lesson is to combine creator-authored designs with shape-aware matching and controlled variation—not to scatter random decoration.
+
+## CreatorLab approach
+
+### Phase 1 — Reusable Decoration Stamps
+1. Let the creator select a small decorated group and save it as a named stamp.
+2. Store each object's ID, relative position to a stamp anchor, rotation, scale, flip flags, color channels, z layer and z order.
+3. Keep the source group untouched; create a preview copy before applying.
+4. Allow stamps to be placed at a target point or repeated along a selected region.
+5. Offer safe transforms (rotation / flip) only when enabled by the creator.
+6. Apply as one undoable operation and provide Cancel / Undo.
+
+### Phase 2 — Shape-aware Auto Decoration
+1. Read the selected solid geometry and classify tiles/edges/corners/slopes.
+2. Divide the selection into zones: outline, corners, inner fill, accents and empty-space details.
+3. Match compatible stamp variants to each zone; do not place a block-design stamp on an incompatible shape.
+4. Use weighted variants and a seeded random generator so results can vary but remain reproducible.
+5. Validate placements against the selection bounds, avoid excessive overlap, and enforce an object budget.
+6. Preview the result before inserting it into the level.
+
+### Phase 3 — Puzzle Tiling / WFC-inspired generation
+- Represent the level area as a grid of cells and define which tile/stamp variants may neighbor one another.
+- Generate only combinations whose edge/connection rules are compatible.
+- Use constraints and backtracking/repair for conflicts; if generation fails, keep the previous preview and report why.
+- Provide controls for density, variation, symmetry, and a fixed seed.
+- WFC is a later extension; first ship reliable stamp capture, matching, preview, and undo.
+
+## Important constraints
+
+- Preserve the user's existing objects and never silently replace them.
+- Never claim generated decoration is guaranteed to be playable or visually perfect.
+- Avoid copying Antiprime's code, proprietary templates, or assets. CreatorLab's algorithms and built-in examples must be original.
+- Keep the Android64 / Geometry Dash 2.2081 / Geode 5.x target in mind.
+- Builds are manual-only; commits must not trigger automatic compilation.
+
+## Research references
+
+- [Antiprime AutoBuild v1.3.0 tutorial](https://www.youtube.com/watch?v=YryjlXPfjk0) — public update overview, puzzle tiler and WFC chapters.
+- [Geometry Dash Editor Guide: Auto-Build System](https://static.wikia.nocookie.net/geometry-dash/images/8/83/GDEditor-v2.2.pdf/revision/latest) — native template workflow.
+- [Geometry Dash Creator School: Custom Objects & Autobuild](https://github.com/GDCreatorSchool/gdcs2/blob/main/content/docs/guides/the-editor/custom-objects-autobuild.md) — practical template and variation concepts.
