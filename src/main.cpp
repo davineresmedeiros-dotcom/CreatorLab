@@ -41,7 +41,7 @@ class CreatorLabStampManagerPopup : public Popup {
         const size_t finish = std::min(start + pageSize, m_files.size());
         for (size_t i = start; i < finish; ++i) {
             std::string label = (m_files[i] == m_selectedFile ? "> " : "") + m_files[i];
-            auto sprite = ButtonSprite::create(label, "goldFont.fnt", "GJ_button_01.png", 0.52f);
+            auto sprite = ButtonSprite::create(label.c_str(), "goldFont.fnt", "GJ_button_01.png", 0.52f);
             if (!sprite) continue;
             auto item = CCMenuItemSpriteExtra::create(
                 sprite, this, menu_selector(CreatorLabStampManagerPopup::onChooseStamp)
