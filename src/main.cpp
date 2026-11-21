@@ -133,8 +133,10 @@ public:
 
 // CreatorLab editor entry points and first Stamp Capture prototype.
 class $modify(CreatorLabEditorUI, EditorUI) {
-    std::string m_selectedStampFile;
-    cocos2d::CCDrawNode* m_stampGhost = nullptr;
+    struct Fields {
+        std::string selectedStampFile;
+        cocos2d::CCDrawNode* stampGhost = nullptr;
+    };
 
     bool init(LevelEditorLayer* editorLayer) {
         if (!EditorUI::init(editorLayer)) {
@@ -286,16 +288,16 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             return;
         }
 
-        if (std::find(files.begin(), files.end(), m_selectedStampFile) == files.end()) {
-            m_selectedStampFile = files.front();
+        if (std::find(files.begin(), files.end(), m_fields->selectedStampFile) == files.end()) {
+            m_fields->selectedStampFile = files.front();
         }
 
         auto popup = CreatorLabStampManagerPopup::create(
             files,
-            m_selectedStampFile,
+            m_fields->selectedStampFile,
             [this](std::string const& selectedFile) {
-                m_selectedStampFile = selectedFile;
-                log::info("CreatorLab: active stamp selected: {}", m_selectedStampFile);
+                m_fields->selectedStampFile = selectedFile;
+                log::info("CreatorLab: active stamp selected: {}", m_fields->selectedStampFile);
             }
         );
         if (popup) popup->show();
@@ -329,9 +331,9 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         });
 
         auto chosenStamp = files.front();
-        if (!m_selectedStampFile.empty()) {
+        if (!m_fields->selectedStampFile.empty()) {
             auto chosen = std::find_if(files.begin(), files.end(), [this](const auto& path) {
-                return path.filename().string() == m_selectedStampFile;
+                return path.filename().string() == m_fields->selectedStampFile;
             });
             if (chosen != files.end()) chosenStamp = *chosen;
         }
@@ -383,9 +385,9 @@ class $modify(CreatorLabEditorUI, EditorUI) {
 
     void onToggleStampGhost(CCObject*) {
         // Press Ghost again to remove the temporary, non-editable layout overlay.
-        if (m_stampGhost) {
-            m_stampGhost->removeFromParentAndCleanup(true);
-            m_stampGhost = nullptr;
+        if (m_fields->stampGhost) {
+            m_fields->stampGhost->removeFromParentAndCleanup(true);
+            m_fields->stampGhost = nullptr;
             FLAlertLayer::create("Stamp Ghost", "Preview overlay cleared. No objects were changed.", "OK")->show();
             return;
         }
@@ -444,9 +446,9 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         });
 
         auto chosenStamp = files.front();
-        if (!m_selectedStampFile.empty()) {
+        if (!m_fields->selectedStampFile.empty()) {
             auto chosen = std::find_if(files.begin(), files.end(), [this](const auto& path) {
-                return path.filename().string() == m_selectedStampFile;
+                return path.filename().string() == m_fields->selectedStampFile;
             });
             if (chosen != files.end()) chosenStamp = *chosen;
         }
@@ -497,7 +499,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         ghost->drawSegment(cocos2d::CCPoint(minX, maxY), cocos2d::CCPoint(minX, minY), 1.5f, ghostColor);
 
         m_editorLayer->addChild(ghost, 9999);
-        m_stampGhost = ghost;
+        m_fields->stampGhost = ghost;
         FLAlertLayer::create(
             "Stamp Ghost",
             fmt::format("Showing {} object positions as a cyan layout ghost.\n\n"
@@ -568,9 +570,9 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         });
 
         auto chosenStamp = stampFiles.front();
-        if (!m_selectedStampFile.empty()) {
+        if (!m_fields->selectedStampFile.empty()) {
             auto chosen = std::find_if(stampFiles.begin(), stampFiles.end(), [this](const auto& path) {
-                return path.filename().string() == m_selectedStampFile;
+                return path.filename().string() == m_fields->selectedStampFile;
             });
             if (chosen != stampFiles.end()) chosenStamp = *chosen;
         }
