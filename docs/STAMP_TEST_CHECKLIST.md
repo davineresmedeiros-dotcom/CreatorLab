@@ -13,7 +13,8 @@ This checklist is for the first manual Android64 build and Geometry Dash test.
 - [ ] Select a small set of decoration objects and press **Stamp**.
 - [ ] Confirm a new JSON stamp is saved.
 - [ ] Press **Stamps** and confirm the list is shown.
-- [ ] Cycle selection and confirm the active filename marker changes.
+- [ ] Click a stamp filename and confirm it becomes the active stamp.
+- [ ] Use the page arrows when there are more than six stamps.
 - [ ] Confirm **Preview** reports the selected file and object count.
 
 ## Ghost
@@ -33,7 +34,7 @@ This checklist is for the first manual Android64 build and Geometry Dash test.
 Record any build error, Geode loading error, crash, wrong placement, or unexpected object modification. Fix and retest before marking the Stamp stage complete.
 
 ## Known limitations before the first test
-- Stamp selection currently cycles with the **Stamps** button; direct click-to-select is not implemented.
+- Stamp Manager displays six files per page; click a filename to select it.
 - Ghost uses schematic dots, not actual object sprites.
 - Fit validation uses object positions, not full visual/sprite bounds.
 - Captured fields are limited to object ID, relative position, rotation, and scale.
