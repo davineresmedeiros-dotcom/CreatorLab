@@ -29,7 +29,7 @@ The project is being implemented incrementally. Features will only be marked com
 - [Neon Circuit straight-stamp data example](examples/neon-circuit-straight.json)
 - [Stamp Capture prototype notes](docs/STAMP_CAPTURE.md)
 
-The editor source now includes an initial Stamp Capture button and JSON save prototype. It records object IDs, positions relative to the first selected object, rotation, and scale. This source change is **not compiled or tested in-game yet**; colors, flips, groups, port data, preview, and placement remain future work.
+The editor source now includes an initial Stamp Capture button and JSON save prototype. It records object IDs, positions relative to a centered selection anchor, relative position bounds, rotation, and scale. This source change is **not compiled or tested in-game yet**; colors, flips, groups, port data, preview, and placement remain future work.
 
 ## Target compatibility
 
