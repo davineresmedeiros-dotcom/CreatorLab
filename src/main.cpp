@@ -3,6 +3,7 @@
 #include <Geode/utils/file.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <chrono>
 #include <iomanip>
 #include <filesystem>
