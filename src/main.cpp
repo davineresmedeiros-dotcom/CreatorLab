@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iomanip>
 #include <filesystem>
+#include <functional>
 #include <sstream>
 #include <vector>
 
@@ -100,11 +101,13 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         }
 
         std::vector<std::string> files;
-        for (const auto& entry : it) {
-            if (ec) break;
-            if (entry.is_regular_file(ec) && entry.path().extension() == ".json") {
+        const std::filesystem::directory_iterator end;
+        while (it != end && !ec) {
+            const auto& entry = *it;
+            if (entry.is_regular_file(ec) && !ec && entry.path().extension() == ".json") {
                 files.push_back(entry.path().filename().string());
             }
+            it.increment(ec);
         }
         if (ec) {
             FLAlertLayer::create("Stamp Browser", "Could not read the stamps folder.", "OK")->show();
