@@ -27,8 +27,10 @@ The decoration system is planned around reusable creator-made stamps, shape-awar
 
 - [Decoration engine research and phased design](DECORATION_ENGINE.md)
 - [Original decoration stamp example catalog](DECORATION_EXAMPLES.md)
+- [Stamp format draft](docs/STAMP_FORMAT.md)
+- [Neon Circuit straight-stamp data example](examples/neon-circuit-straight.json)
 
-The example catalog currently describes original design recipes. It is not yet an in-game stamp library.
+The catalog and JSON example describe design/data formats only. They are not yet an in-game stamp library or importable object set.
 
 ## Target compatibility
 
