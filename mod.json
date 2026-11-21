@@ -1,0 +1,9 @@
+{
+  "geode": "5.11.0",
+  "gd": "2.2081",
+  "id": "davineresmedeiros-dotcom.creatorlab",
+  "name": "CreatorLab",
+  "version": "v1.0.0",
+  "developer": "Davi Lucca Neres",
+  "description": "An all-in-one creator toolkit for Geometry Dash, with decoration and level-design generators."
+}
