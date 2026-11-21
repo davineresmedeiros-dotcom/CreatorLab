@@ -217,18 +217,18 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         }
         std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
 
-        std::regex namePattern("\\\"name\\\"\\\\s*:\\\\s*\\\"([^\\\"]*)\\\"");
+        std::regex namePattern(R"rx("name"\s*:\s*"([^"]*)")rx");
         std::smatch nameMatch;
         std::string stampName = chosenStamp.filename().string();
         if (std::regex_search(data, nameMatch, namePattern)) stampName = nameMatch[1].str();
 
-        std::regex objectPattern("\\\"object_id\\\"\\\\s*:\\\\s*(-?\\\\d+)");
+        std::regex objectPattern(R"rx("object_id"\s*:\s*(-?\d+))rx");
         const auto objectCount = static_cast<size_t>(
             std::distance(std::sregex_iterator(data.begin(), data.end(), objectPattern), std::sregex_iterator())
         );
 
         auto readBound = [&data](const std::string& key, float& value) -> bool {
-            std::regex pattern(std::string("\\\"") + key + "\\\"\\\\s*:\\\\s*(-?[0-9]+(?:\\\\.[0-9]+)?)");
+            std::regex pattern(std::string(R"rx(")rx") + key + R"rx("\s*:\s*(-?[0-9]+(?:\.[0-9]+)?))rx");
             std::smatch match;
             if (!std::regex_search(data, match, pattern)) return false;
             try {
