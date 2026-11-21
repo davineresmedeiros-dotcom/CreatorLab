@@ -222,7 +222,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         std::string stampData((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
 
         auto readNumber = [&stampData](const std::string& key, float& value) -> bool {
-            std::regex pattern("\\"" + key + "\\"\\s*:\\s*(-?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)");
+            std::regex pattern("\\"" + key + "\\"\\\\s*:\\\\s*(-?[0-9]+(?:\\\\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)");
             std::smatch match;
             if (!std::regex_search(stampData, match, pattern)) return false;
             try {
@@ -277,7 +277,7 @@ class $modify(CreatorLabEditorUI, EditorUI) {
                 }
                 // Only serialize ID and transform fields. No groups, colors, triggers, or editor metadata.
                 objectString += fmt::format(
-                    "1,{},2,{:.3f},3,{:.3f},6,{:.3f},32,{:.3f},41,{:.3f};",
+                    "1,{},2,{:.3f},3,{:.3f},6,{:.3f},32,{:.3f},42,{:.3f};",
                     objectID, x, y, rotation, scaleX, scaleY
                 );
                 ++objectCount;
