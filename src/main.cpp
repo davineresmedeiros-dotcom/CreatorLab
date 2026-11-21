@@ -184,11 +184,20 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         }
 
         std::ostringstream message;
-        message << "Selected stamp:\n" << m_selectedStampFile
-                << "\n\nStamp files: " << files.size()
-                << "\nTap Stamps again to select another file.\n"
-                << "Press Apply to place the selected stamp in your area.";
-        FLAlertLayer::create("Stamp Browser", message.str(), "Close")->show();
+        message << "Selected stamp:\\n" << m_selectedStampFile
+                << "\\n\\nSaved stamps (" << files.size() << "):\\n";
+        const size_t displayLimit = std::min<size_t>(files.size(), 12);
+        for (size_t i = 0; i < displayLimit; ++i) {
+            message << (files[i] == m_selectedStampFile ? "  > " : "  - ")
+                    << files[i] << "\\n";
+        }
+        if (files.size() > displayLimit) {
+            message << "  ... and " << (files.size() - displayLimit) << " more\\n";
+        }
+        message << "\\nTap Stamps again to cycle selection.\\n"
+                << "Press Apply to place the selected stamp in your area.\\n"
+                << "This manager view only lists/selects files; it does not rename or delete them.";
+        FLAlertLayer::create("Stamp Manager", message.str(), "Close")->show();
     }
 
     void onPreviewStamp(CCObject*) {
