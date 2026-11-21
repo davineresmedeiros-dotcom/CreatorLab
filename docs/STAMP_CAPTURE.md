@@ -22,7 +22,7 @@ This prototype does not yet preserve:
 - object-specific extra fields;
 - connection ports or Neon Circuit graph data.
 
-It also does not yet provide a stamp browser, thumbnail, preview, or stamp placement/import. The anchor is based on object positions (not full sprite collision/visual bounds), so it is a useful layout center but not an exact rendered bounding box.
+It now includes a basic Stamp Browser button that lists saved `.json` stamp filenames (up to 15 names in the popup, with the total count). It does not parse stamp metadata, show thumbnails, preview objects, or place/import stamps yet. The anchor is based on object positions (not full sprite collision/visual bounds), so it is a useful layout center but not an exact rendered bounding box.
 
 ## Testing
 
