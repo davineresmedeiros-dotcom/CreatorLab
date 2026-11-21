@@ -18,6 +18,7 @@ using namespace geode::prelude;
 // CreatorLab editor entry points and first Stamp Capture prototype.
 class $modify(CreatorLabEditorUI, EditorUI) {
     std::string m_selectedStampFile;
+    cocos2d::CCDrawNode* m_stampGhost = nullptr;
 
     bool init(LevelEditorLayer* editorLayer) {
         if (!EditorUI::init(editorLayer)) {
@@ -86,6 +87,20 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             menu->addChild(previewButton);
             if (m_uiItems) {
                 m_uiItems->addObject(previewButton);
+            }
+        }
+
+        auto ghostSprite = ButtonSprite::create("Ghost", "goldFont.fnt", "GJ_button_01.png", 0.7f);
+        if (ghostSprite) {
+            auto ghostButton = CCMenuItemSpriteExtra::create(
+                ghostSprite,
+                this,
+                menu_selector(CreatorLabEditorUI::onToggleStampGhost)
+            );
+            ghostButton->setID("creatorlab-stamp-ghost-button");
+            menu->addChild(ghostButton);
+            if (m_uiItems) {
+                m_uiItems->addObject(ghostButton);
             }
         }
 
@@ -253,6 +268,132 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         message << "This is an information preview only. It does not place or change any objects.\n"
                 << "A visual ghost preview will be added after the placement API is verified.";
         FLAlertLayer::create("Stamp Preview", message.str(), "Close")->show();
+    }
+
+    void onToggleStampGhost(CCObject*) {
+        // Press Ghost again to remove the temporary, non-editable layout overlay.
+        if (m_stampGhost) {
+            m_stampGhost->removeFromParentAndCleanup(true);
+            m_stampGhost = nullptr;
+            FLAlertLayer::create("Stamp Ghost", "Preview overlay cleared. No objects were changed.", "OK")->show();
+            return;
+        }
+
+        auto selected = this->getSelectedObjects();
+        if (!selected || selected->count() == 0) {
+            FLAlertLayer::create("Stamp Ghost", "Select objects to define the preview area first.", "OK")->show();
+            return;
+        }
+
+        bool hasArea = false;
+        float minX = 0.f, minY = 0.f, maxX = 0.f, maxY = 0.f;
+        for (unsigned int i = 0; i < selected->count(); ++i) {
+            auto object = typeinfo_cast<GameObject*>(selected->objectAtIndex(i));
+            if (!object) continue;
+            const float x = object->getPositionX();
+            const float y = object->getPositionY();
+            if (!hasArea) {
+                minX = maxX = x;
+                minY = maxY = y;
+                hasArea = true;
+            } else {
+                minX = std::min(minX, x);
+                minY = std::min(minY, y);
+                maxX = std::max(maxX, x);
+                maxY = std::max(maxY, y);
+            }
+        }
+        if (!hasArea) {
+            FLAlertLayer::create("Stamp Ghost", "No valid area markers were selected.", "OK")->show();
+            return;
+        }
+
+        auto stampDir = Mod::get()->getSaveDir() / "stamps";
+        std::error_code ec;
+        std::filesystem::directory_iterator it(std::filesystem::path(stampDir.string()), ec);
+        if (ec) {
+            FLAlertLayer::create("Stamp Ghost", "No saved stamps found. Capture a stamp first.", "OK")->show();
+            return;
+        }
+        std::vector<std::filesystem::path> files;
+        const std::filesystem::directory_iterator end;
+        while (it != end && !ec) {
+            const auto& entry = *it;
+            if (entry.is_regular_file(ec) && !ec && entry.path().extension() == ".json") {
+                files.push_back(entry.path());
+            }
+            it.increment(ec);
+        }
+        if (ec || files.empty()) {
+            FLAlertLayer::create("Stamp Ghost", "Could not read a saved stamp file.", "OK")->show();
+            return;
+        }
+        std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+            return a.filename().string() > b.filename().string();
+        });
+
+        auto chosenStamp = files.front();
+        if (!m_selectedStampFile.empty()) {
+            auto chosen = std::find_if(files.begin(), files.end(), [this](const auto& path) {
+                return path.filename().string() == m_selectedStampFile;
+            });
+            if (chosen != files.end()) chosenStamp = *chosen;
+        }
+
+        std::ifstream input(chosenStamp.string());
+        if (!input) {
+            FLAlertLayer::create("Stamp Ghost", "Could not open the selected stamp.", "OK")->show();
+            return;
+        }
+        std::string stampData((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+        const std::regex objectPattern(
+            R"rx(\{\s*"object_id"\s*:\s*(-?\d+)\s*,\s*"x"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"y"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"rotation"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"scale_x"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"scale_y"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*\})rx"
+        );
+
+        auto ghost = cocos2d::CCDrawNode::create();
+        if (!ghost) {
+            FLAlertLayer::create("Stamp Ghost", "Could not create the preview overlay.", "OK")->show();
+            return;
+        }
+
+        const float centerX = (minX + maxX) / 2.f;
+        const float centerY = (minY + maxY) / 2.f;
+        const auto ghostColor = cocos2d::ccc4f(0.15f, 0.95f, 1.0f, 0.72f);
+        unsigned int count = 0;
+        for (std::sregex_iterator match(stampData.begin(), stampData.end(), objectPattern), endMatch;
+             match != endMatch; ++match) {
+            try {
+                const int objectID = std::stoi((*match)[1].str());
+                const float x = centerX + std::stof((*match)[2].str());
+                const float y = centerY + std::stof((*match)[3].str());
+                if (objectID <= 0 || !std::isfinite(x) || !std::isfinite(y)) continue;
+                ghost->drawDot(cocos2d::CCPoint(x, y), 3.5f, ghostColor);
+                ++count;
+            } catch (...) {
+                continue;
+            }
+        }
+
+        if (count == 0) {
+            FLAlertLayer::create("Stamp Ghost", "This stamp contains no supported object records.", "OK")->show();
+            return;
+        }
+
+        // Outline the selected area; these selected objects remain untouched.
+        ghost->drawSegment(cocos2d::CCPoint(minX, minY), cocos2d::CCPoint(maxX, minY), 1.5f, ghostColor);
+        ghost->drawSegment(cocos2d::CCPoint(maxX, minY), cocos2d::CCPoint(maxX, maxY), 1.5f, ghostColor);
+        ghost->drawSegment(cocos2d::CCPoint(maxX, maxY), cocos2d::CCPoint(minX, maxY), 1.5f, ghostColor);
+        ghost->drawSegment(cocos2d::CCPoint(minX, maxY), cocos2d::CCPoint(minX, minY), 1.5f, ghostColor);
+
+        m_editorLayer->addChild(ghost, 9999);
+        m_stampGhost = ghost;
+        FLAlertLayer::create(
+            "Stamp Ghost",
+            fmt::format("Showing {} object positions as a cyan layout ghost.\n\n"
+                       "This is a schematic dot preview, not the real object sprites. "
+                       "Press Ghost again to clear it. Nothing was placed or edited.", count),
+            "OK"
+        )->show();
     }
 
     void onApplyStamp(CCObject*) {
