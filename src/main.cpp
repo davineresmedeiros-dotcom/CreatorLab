@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <filesystem>
 #include <functional>
+#include <fstream>
+#include <regex>
 #include <sstream>
 #include <vector>
 
@@ -67,6 +69,20 @@ class $modify(CreatorLabEditorUI, EditorUI) {
             menu->addChild(stampsButton);
             if (m_uiItems) {
                 m_uiItems->addObject(stampsButton);
+            }
+        }
+
+        auto applySprite = ButtonSprite::create("Apply", "goldFont.fnt", "GJ_button_01.png", 0.7f);
+        if (applySprite) {
+            auto applyButton = CCMenuItemSpriteExtra::create(
+                applySprite,
+                this,
+                menu_selector(CreatorLabEditorUI::onApplyStamp)
+            );
+            applyButton->setID("creatorlab-apply-stamp-button");
+            menu->addChild(applyButton);
+            if (m_uiItems) {
+                m_uiItems->addObject(applyButton);
             }
         }
 
@@ -136,6 +152,161 @@ class $modify(CreatorLabEditorUI, EditorUI) {
         }
         message << "\n\nThis first browser lists captured files only; stamp preview and placement are next.";
         FLAlertLayer::create("Stamp Browser", message.str(), "Close")->show();
+    }
+
+    void onApplyStamp(CCObject*) {
+        auto selected = this->getSelectedObjects();
+        if (!selected || selected->count() == 0) {
+            FLAlertLayer::create(
+                "Apply Stamp",
+                "Select objects to define the target area, then press Apply.\n\n"
+                "The selected objects are only used as area markers and will not be changed.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        bool hasArea = false;
+        float minX = 0.f, minY = 0.f, maxX = 0.f, maxY = 0.f;
+        for (unsigned int i = 0; i < selected->count(); ++i) {
+            auto object = typeinfo_cast<GameObject*>(selected->objectAtIndex(i));
+            if (!object) continue;
+            const float x = object->getPositionX();
+            const float y = object->getPositionY();
+            if (!hasArea) {
+                minX = maxX = x;
+                minY = maxY = y;
+                hasArea = true;
+            } else {
+                minX = std::min(minX, x);
+                minY = std::min(minY, y);
+                maxX = std::max(maxX, x);
+                maxY = std::max(maxY, y);
+            }
+        }
+        if (!hasArea) {
+            FLAlertLayer::create("Apply Stamp", "The selection has no valid objects to define an area.", "OK")->show();
+            return;
+        }
+
+        auto stampDir = Mod::get()->getSaveDir() / "stamps";
+        std::error_code ec;
+        std::filesystem::directory_iterator it(std::filesystem::path(stampDir.string()), ec);
+        if (ec) {
+            FLAlertLayer::create("Apply Stamp", "No saved stamps folder was found. Capture a stamp first.", "OK")->show();
+            return;
+        }
+
+        std::vector<std::filesystem::path> stampFiles;
+        const std::filesystem::directory_iterator end;
+        while (it != end && !ec) {
+            const auto& entry = *it;
+            if (entry.is_regular_file(ec) && !ec && entry.path().extension() == ".json") {
+                stampFiles.push_back(entry.path());
+            }
+            it.increment(ec);
+        }
+        if (ec || stampFiles.empty()) {
+            FLAlertLayer::create("Apply Stamp", "Could not find a saved stamp file.", "OK")->show();
+            return;
+        }
+        std::sort(stampFiles.begin(), stampFiles.end(), [](const auto& a, const auto& b) {
+            return a.filename().string() > b.filename().string();
+        });
+
+        std::ifstream input(stampFiles.front().string());
+        if (!input) {
+            FLAlertLayer::create("Apply Stamp", "Could not open the newest stamp file.", "OK")->show();
+            return;
+        }
+        std::string stampData((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+
+        auto readNumber = [&stampData](const std::string& key, float& value) -> bool {
+            std::regex pattern("\\"" + key + "\\"\\s*:\\s*(-?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?)");
+            std::smatch match;
+            if (!std::regex_search(stampData, match, pattern)) return false;
+            try {
+                value = std::stof(match[1].str());
+                return std::isfinite(value);
+            } catch (...) {
+                return false;
+            }
+        };
+
+        float stampMinX, stampMinY, stampMaxX, stampMaxY;
+        if (!readNumber("min_x", stampMinX) || !readNumber("min_y", stampMinY) ||
+            !readNumber("max_x", stampMaxX) || !readNumber("max_y", stampMaxY)) {
+            FLAlertLayer::create("Apply Stamp", "This stamp has invalid or missing bounds.", "OK")->show();
+            return;
+        }
+
+        const float areaWidth = maxX - minX;
+        const float areaHeight = maxY - minY;
+        const float stampWidth = stampMaxX - stampMinX;
+        const float stampHeight = stampMaxY - stampMinY;
+        if (stampWidth > areaWidth || stampHeight > areaHeight) {
+            FLAlertLayer::create(
+                "Apply Stamp",
+                "The stamp does not fit inside the selected area.\n\n"
+                "Nothing was placed. Select a larger area.",
+                "OK"
+            )->show();
+            return;
+        }
+
+        const float targetX = (minX + maxX) / 2.f;
+        const float targetY = (minY + maxY) / 2.f;
+        const std::regex objectPattern(
+            R"(\{\s*"object_id"\s*:\s*(-?\d+)\s*,\s*"x"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"y"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"rotation"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"scale_x"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*,\s*"scale_y"\s*:\s*(-?(?:[0-9]+\.?[0-9]*|\.[0-9]+))\s*\})"
+        );
+        std::string objectString;
+        unsigned int objectCount = 0;
+        for (std::sregex_iterator match(stampData.begin(), stampData.end(), objectPattern), endMatch;
+             match != endMatch; ++match) {
+            const auto& m = *match;
+            try {
+                const int objectID = std::stoi(m[1].str());
+                const float x = targetX + std::stof(m[2].str());
+                const float y = targetY + std::stof(m[3].str());
+                const float rotation = std::stof(m[4].str());
+                const float scaleX = std::stof(m[5].str());
+                const float scaleY = std::stof(m[6].str());
+                if (objectID <= 0 || !std::isfinite(x) || !std::isfinite(y) ||
+                    !std::isfinite(rotation) || !std::isfinite(scaleX) || !std::isfinite(scaleY)) {
+                    continue;
+                }
+                // Only serialize ID and transform fields. No groups, colors, triggers, or editor metadata.
+                objectString += fmt::format(
+                    "1,{},2,{:.3f},3,{:.3f},6,{:.3f},32,{:.3f},41,{:.3f};",
+                    objectID, x, y, rotation, scaleX, scaleY
+                );
+                ++objectCount;
+            } catch (...) {
+                continue;
+            }
+        }
+
+        if (objectCount == 0) {
+            FLAlertLayer::create("Apply Stamp", "No valid object records were found in this stamp.", "OK")->show();
+            return;
+        }
+
+        // The game creates new objects from this string; the selected area markers are not edited.
+        auto created = m_editorLayer->createObjectsFromString(objectString, true, true);
+        if (!created || created->count() == 0) {
+            FLAlertLayer::create("Apply Stamp", "The game could not create the stamp objects.", "OK")->show();
+            return;
+        }
+
+        FLAlertLayer::create(
+            "Stamp Applied!",
+            fmt::format(
+                "Placed {} new objects inside the selected area's center.\n\n"
+                "The selected objects were left untouched; no group or color data was applied.",
+                created->count()
+            ),
+            "Great!"
+        )->show();
     }
 
     void onCaptureStamp(CCObject*) {
