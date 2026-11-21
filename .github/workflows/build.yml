@@ -1,9 +1,7 @@
 name: Build CreatorLab
 
 on:
-  push:
-    branches:
-      - main
+  # Builds only when manually requested from the Actions tab.
   workflow_dispatch:
 
 jobs:
@@ -18,7 +16,7 @@ jobs:
         uses: geode-sdk/build-geode-mod@main
         with:
           target: Android64
-          sdk: latest
+          sdk: given
 
       - name: Upload .geode artifact
         uses: actions/upload-artifact@v4
